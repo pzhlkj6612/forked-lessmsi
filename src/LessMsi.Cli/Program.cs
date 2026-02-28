@@ -128,12 +128,15 @@ namespace LessMsi.Cli
                 string tempOutDirName = $"{outDirName}{TempFolderSuffix}";
                 Wixtracts.ExtractFiles(msiFile, tempOutDirName, filesToExtract.ToArray(), PrintProgress, extractionMode);
 
-                var fileNameCountingDict = new Dictionary<string, int>();
+                if (Directory.Exists(tempOutDirName))
+                {
+                    var fileNameCountingDict = new Dictionary<string, int>();
 
-                outDirName += "\\";
-                Directory.CreateDirectory(outDirName);
-                copyFilesInFlatWay(tempOutDirName, outDirName, extractionMode, fileNameCountingDict);
-                Directory.Delete(tempOutDirName, true);
+                    outDirName += "\\";
+                    Directory.CreateDirectory(outDirName);
+                    copyFilesInFlatWay(tempOutDirName, outDirName, extractionMode, fileNameCountingDict);
+                    Directory.Delete(tempOutDirName, true);
+                }
             }
             else
             {

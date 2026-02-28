@@ -286,6 +286,13 @@ namespace LessMsi.Msi
 
 		        progress = new ExtractionProgress(progressCallback, filesToExtract.Length);
 
+		        if (filesToExtract.Length < 1)
+		        {
+			        Trace.WriteLine("The MSI '" + msi + "' contains no files to extract.");
+			        progress.ReportProgress(ExtractionActivity.Complete, "", filesExtractedSoFar);
+			        return;
+		        }
+
 		        if (!FileSystem.Exists(msi))
 		        {
 			        Trace.WriteLine("File \'" + msi + "\' not found.");
@@ -495,6 +502,8 @@ namespace LessMsi.Msi
 	    {
 		    const string query = "SELECT * FROM `Media`";
 		    var localCabFiles = new List<CabInfo>();
+		    if (!msidb.TableExists("Media"))
+			    return localCabFiles;
 		    using (View view = msidb.OpenExecuteView(query))
 		    {
 			    Record record;
