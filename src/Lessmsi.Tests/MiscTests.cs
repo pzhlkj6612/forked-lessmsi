@@ -140,5 +140,18 @@ namespace LessMsi.Tests
         {
             ExtractAndCompareToMaster("IviNetSharedComponents32_Fx20_1.3.0.msi");
         }
+
+		/// <summary>
+		/// From https://github.com/activescott/lessmsi/issues/136
+		/// Some MSI files (e.g. Firefox, Thunderbird) have no files to extract.
+		/// Extraction should complete without error in this case.
+		/// </summary>
+		[Fact]
+		public void MsiWithNoFiles()
+		{
+			var msiFileName = "no-files.msi";
+			var actualFileEntries = ExtractFilesFromMsi(msiFileName, null);
+			Assert.Equal(0, actualFileEntries.Entries.Count);
+		}
     }
 }
