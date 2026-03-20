@@ -128,12 +128,15 @@ namespace LessMsi.Cli
                 string tempOutDirName = $"{outDirName}{TempFolderSuffix}";
                 Wixtracts.ExtractFiles(msiFile, tempOutDirName, filesToExtract.ToArray(), PrintProgress, extractionMode);
 
-                var fileNameCountingDict = new Dictionary<string, int>();
+                if (Directory.Exists(tempOutDirName))
+                {
+                    var fileNameCountingDict = new Dictionary<string, int>();
 
-                outDirName += "\\";
-                Directory.CreateDirectory(outDirName);
-                copyFilesInFlatWay(tempOutDirName, outDirName, extractionMode, fileNameCountingDict);
-                Directory.Delete(tempOutDirName, true);
+                    outDirName += "\\";
+                    Directory.CreateDirectory(outDirName);
+                    copyFilesInFlatWay(tempOutDirName, outDirName, extractionMode, fileNameCountingDict);
+                    Directory.Delete(tempOutDirName, true);
+                }
             }
             else
             {
@@ -183,7 +186,16 @@ namespace LessMsi.Cli
         private static void PrintProgress(IAsyncResult result)
         {
             var progress = result as Wixtracts.ExtractionProgress;
-            if (progress == null || string.IsNullOrEmpty(progress.CurrentFileName))
+            if (progress == null)
+                return;
+
+            if (progress.Activity == Wixtracts.ExtractionActivity.Complete && progress.TotalFileCount == 0)
+            {
+                Console.WriteLine("The MSI contains no files to extract.");
+                return;
+            }
+
+            if (string.IsNullOrEmpty(progress.CurrentFileName))
                 return;
 
             Console.WriteLine(string.Format("{0}/{1}\t{2}", progress.FilesExtractedSoFar + 1, progress.TotalFileCount, progress.CurrentFileName));

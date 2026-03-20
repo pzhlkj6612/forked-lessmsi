@@ -1,5 +1,6 @@
 ﻿using Xunit;
 using LessIO;
+using Microsoft.Tools.WindowsInstallerXml.Msi;
 
 namespace LessMsi.Tests
 {
@@ -140,5 +141,44 @@ namespace LessMsi.Tests
         {
             ExtractAndCompareToMaster("IviNetSharedComponents32_Fx20_1.3.0.msi");
         }
+
+		/// <summary>
+		/// From https://github.com/activescott/lessmsi/issues/136
+		/// Some MSI files (e.g. Firefox, Thunderbird) have no files to extract.
+		/// Extraction should complete without error in this case.
+		/// </summary>
+		[Fact]
+		public void MsiWithNoFiles()
+		{
+			var outputDir = GetTestOutputDir(LessIO.Path.Empty, "MsiWithNoFiles");
+
+			if (FileSystem.Exists(outputDir))
+				FileSystem.RemoveDirectory(outputDir, true);
+			FileSystem.CreateDirectory(outputDir);
+
+			// Construct a minimal MSI with no File table
+			var msiPath = System.IO.Path.Combine(outputDir.PathString, "no-files.msi");
+			using (var db = new Database(msiPath, OpenDatabase.Create))
+			{
+				using (var summaryInfo = new SummaryInformation(db))
+				{
+					// PID_PAGECOUNT (14): Required minimum installer version (200 = version 2.0)
+					summaryInfo.SetProperty(14, 200);
+					summaryInfo.Persist();
+				}
+				db.Commit();
+			}
+
+			// Extraction should complete without error
+			var extractDir = System.IO.Path.Combine(outputDir.PathString, "extracted");
+			LessMsi.Msi.Wixtracts.ExtractFiles(new LessIO.Path(msiPath), extractDir);
+
+			// With no files to extract, the output directory may not be created
+			if (System.IO.Directory.Exists(extractDir))
+			{
+				var actualFileEntries = FileEntryGraph.GetActualEntries(extractDir, "no-files.msi");
+				Assert.Equal(0, actualFileEntries.Entries.Count);
+			}
+		}
     }
 }
