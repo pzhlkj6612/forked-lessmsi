@@ -500,10 +500,11 @@ namespace LessMsi.Msi
 		/// <returns></returns>
 	    private static List<CabInfo> CabsFromMsiToDisk(Path msi, Database msidb, string outputDir)
 	    {
+		    if (!msidb.TableExists("Media"))
+			    return new List<CabInfo>();
+
 		    const string query = "SELECT * FROM `Media`";
 		    var localCabFiles = new List<CabInfo>();
-		    if (!msidb.TableExists("Media"))
-			    return localCabFiles;
 		    using (View view = msidb.OpenExecuteView(query))
 		    {
 			    Record record;
